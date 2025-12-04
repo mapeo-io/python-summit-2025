@@ -1,4 +1,5 @@
 # Python summit 2025
+This is a short introduction to GeoDjango, prepared for Python Summit Warsaw 2025.
 
 ### Start a sandbox
 Start sandbox environment container in detached mode.
@@ -292,5 +293,3 @@ urlpatterns = [
     path('atms', views.find_atms),
 ]
 ```
-Useful links:
-- 

@@ -1,24 +1,32 @@
-Python summit 2025
+# Python summit 2025
 This is a short introduction to GeoDjango, prepared for Python Summit Warsaw 2025.
 
-Start a sandbox
+### Start a sandbox
 Start sandbox environment container in detached mode.
-
+``` commandline
 docker compose up sandbox -d
+```
 Enter sandbox terminal.
-
+```commandline
 docker compose exec sandbox /bin/bash
+```
 Note, that all commands from now on should be run in the sandbox terminal.
 
-Create django project
+
+### Create django project
+
 Create django project named "atm_nearby" in the directory sandbox
-
+```commandline
 django-admin startproject atm_nearby .
+```
+
 Create django application named "app"
-
+```
 python3 manage.py startapp app
-Enable geodjango in the project and add the newly created application to settings file
+```
 
+Enable geodjango in the project and add the newly created application to settings file
+```python
 # ./atm_nearby/settings.py
 
 INSTALLED_APPS = [
@@ -31,9 +39,13 @@ INSTALLED_APPS = [
     'django.contrib.gis',
     'app'
 ]
-Database
+```
+
+### Database
+
 Connect django to postgres database
 
+```python
 # ./atm_nearby/settings.py
 
 DATABASES = {
@@ -46,8 +58,11 @@ DATABASES = {
         'PORT': os.getenv("POSTGRES_PORT"),
     }
 }
+```
+
 Create ORM model for our data
 
+```python
 # ./app/model.py
 
 from django.contrib.gis.db import models
@@ -56,17 +71,24 @@ class Atm(models.Model):
 
     geom = models.PointField(srid=3857, spatial_index=True)
     provider = models.CharField(max_length=64, null=True, blank=True)
+```
+
 Make migrations
-
+```commandline
 python3 manage.py makemigrations
-Apply migrations
+```
 
+Apply migrations
+```commandline
 python3 manage.py migrate
-Load sample data
-Download sample data
+```
+
+### Load sample data
+
+<a href="./test_data.gpkg">Download sample data</a>
 
 Create a script loading sample data
-
+```python
 from django.contrib.gis.gdal import DataSource
 from app.models import Atm
 
@@ -83,26 +105,33 @@ for feature in layer:
     )
 
 print("Import DONE!")
+```
+
 Execute data import script
-
+```commandline
 python3 manage.py shell < load_data.py
-Other settings
+```
+### Other settings
 Alow application to be response to any host
-
+```python
 # ./atm_nearby/settings.py
 
 ALLOWED_HOSTS = ['*']
+```
 Add static files dir, to be able to use CSS
-
+```python
 # ./atm_nearby/settings.py
 
 STATIC_URL = 'static/'
 STATICFILES_DIRS = [
     os.path.join(BASE_DIR, 'static'),
 ]
-Create first django view
-Create urls.py in app module. This file will be responsible for connecting user to right service.
+```
 
+### Create first django view
+
+Create urls.py in app module. This file will be responsible for connecting user to right service.
+```python
 # ./app/urls.py
 
 from django.urls import path
@@ -112,8 +141,9 @@ from app import views
 urlpatterns = [
     path('', views.index),
 ]
+```
 Load our urls to project urls
-
+``` python
 # ./atm_nearby/urls.py
 
 from django.contrib import admin
@@ -123,16 +153,20 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('', include('app.urls')),
 ]
-Create index view
+```
 
+Create index view
+``` python
 # ./app/views.py
 
 from django.shortcuts import render
 
 def index(request):
     return render(request, "index.html")
-index.html
+```
 
+index.html
+```html
 <html>
     <head>
         <meta charset="UTF-8" />
@@ -222,13 +256,14 @@ index.html
         //         style: atmStyle
         //     })
         //     map.addLayer(atmLayer)
-
         });
     </script>
 </body>
 </html>
-Create service for finding ATMs nearby
+```
 
+Create service for finding ATMs nearby
+``` python
 # ./app/views.py
 
 from django.http import HttpResponse
@@ -256,8 +291,10 @@ def find_atms(request):
 
     return HttpResponse(res, content_type="application/json")
 
-Publish the endpoing
+```
 
+Publish the endpoing
+```python
 # ./app/urls.py
 
 from django.urls import path
@@ -267,3 +304,4 @@ urlpatterns = [
     path('', views.index),
     path('atms', views.find_atms),
 ]
+```

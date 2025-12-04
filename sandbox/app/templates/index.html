@@ -1,0 +1,95 @@
+<html>
+    <head>
+        <meta charset="UTF-8" />
+        <title>ATM nearby</title>
+
+        <script src="https://cdn.jsdelivr.net/npm/ol@v10.4.0/dist/ol.js"></script>
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ol@v10.4.0/ol.css">
+
+        <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+
+        <link rel="stylesheet" href="/static/style.css">
+    </head>
+<body>
+    <div id="navbar">
+        <img src="/static/atm.png">
+        <h1>ATM nearby</h1>
+    </div>
+    <div id="map"></div>
+
+    <script>
+        const atmStyle = new ol.style.Style({
+            image: new ol.style.Icon({
+                src: '/static/atm.png',
+                scale: 0.08,
+                anchor: [0.5, 1],
+            }),
+        });
+        const userIconStyle = new ol.style.Style({
+            image: new ol.style.Icon({
+                src: '/static/pin.png',
+                scale: 0.08,
+                anchor: [0.5, 1],
+            }),
+        });
+
+        const geojsonFormat = new ol.format.GeoJSON();
+
+        const osmLayer = new ol.layer.Tile({
+            source: new ol.source.OSM(),
+            className: 'ol_bw'
+        });
+
+        const positionVectorSource = new ol.source.Vector({ features: [] });
+        const userPositionLayer = new ol.layer.Vector({ source: positionVectorSource });
+
+        const view = new ol.View({
+                center: [2337631, 6842158],
+                zoom: 15,
+            })
+
+        const map = new ol.Map({
+            layers: [
+                osmLayer,
+                userPositionLayer,
+            ],
+            target: 'map',
+            view: view,
+
+        });
+
+        const geolocation = new ol.Geolocation({
+            projection: view.getProjection(),
+        });
+
+        geolocation.setTracking(true);
+        geolocation.on('change:position', async function () {
+
+            const coordinates = geolocation.getPosition();
+            const marker = new ol.Feature(new ol.geom.Point(coordinates))
+            marker.setStyle(userIconStyle);
+            positionVectorSource.clear();
+            positionVectorSource.addFeature(marker);
+
+            view.animate({
+                    center: coordinates,
+                    zoom:16,
+                    duration: 2000,
+                })
+
+            const atms = await axios.get(`/atms?x=${coordinates[0]}&y=${coordinates[1]}`)
+
+            const atmVectorSource = new ol.source.Vector({
+                features: geojsonFormat.readFeatures(atms.data)
+            });
+
+            atmLayer = new ol.layer.Vector({
+                source: atmVectorSource,
+                style: atmStyle
+            })
+            map.addLayer(atmLayer)
+
+        });
+    </script>
+</body>
+</html>

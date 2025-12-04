@@ -17,7 +17,7 @@ Note, that all commands from now on should be run in the sandbox terminal.
 
 Create django project named "atm_nearby" in the directory sandbox
 ```commandline
-django-admin startproject atm_nearby sandbox
+django-admin startproject atm_nearby .
 ```
 
 Create django application named "app"
@@ -41,7 +41,7 @@ INSTALLED_APPS = [
 ]
 ```
 
-### Databasse
+### Database
 
 Connect django to postgres database
 
@@ -256,7 +256,7 @@ index.html
         //         style: atmStyle
         //     })
         //     map.addLayer(atmLayer)
-        // });
+        });
     </script>
 </body>
 </html>
@@ -265,6 +265,17 @@ index.html
 Create service for finding ATMs nearby
 ``` python
 # ./app/views.py
+
+from django.http import HttpResponse
+from django.shortcuts import render
+from app.models import Atm
+from django.contrib.gis.geos import Point
+from django.core.serializers import serialize
+
+
+def index(request):
+    return render(request, "index.html")
+
 
 def find_atms(request):
 
@@ -279,6 +290,7 @@ def find_atms(request):
     res = serialize("geojson", atms, geometry_field="geom", fields=["provider"], srid=3857)
 
     return HttpResponse(res, content_type="application/json")
+
 ```
 
 Publish the endpoing

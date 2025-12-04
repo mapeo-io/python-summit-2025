@@ -1,0 +1,28 @@
+# ./docker-compose.yaml
+services:
+  sandbox_db:
+    image: postgis/postgis:16-3.4-alpine
+    env_file:
+      - 'dockerfiles/local.env'
+    volumes:
+      - ./__pg_data__:/var/lib/postgresql/data
+    networks:
+      - sandbox_net
+
+  sandbox:
+    build:
+      context: .
+      dockerfile: dockerfiles/django.dockerfile
+    env_file:
+      - 'dockerfiles/local.env'
+    volumes:
+      - ./sandbox:/sandbox
+    ports:
+      - 8080:8000
+    networks:
+      - sandbox_net
+    depends_on:
+      - sandbox_db
+
+networks:
+  sandbox_net:

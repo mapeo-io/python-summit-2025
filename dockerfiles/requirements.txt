@@ -1,0 +1,3 @@
+Django
+pyproj
+psycopg2-binary

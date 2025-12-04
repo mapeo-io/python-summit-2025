@@ -85,8 +85,6 @@ python3 manage.py migrate
 
 ### Load sample data
 
-<a href="./test_data.gpkg">Download sample data</a>
-
 Create a script loading sample data
 ```python
 from django.contrib.gis.gdal import DataSource
